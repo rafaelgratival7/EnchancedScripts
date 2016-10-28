@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Reflection;
 using System.Linq;
@@ -40,6 +40,35 @@ public class Utilities : NetworkBehaviour
 	}
 
 	/// <summary>
+	/// Play the Clip, at Position, with Volume in Network.
+	/// Destroyed after clip lengh.
+	/// </summary>
+	/// <returns>The <see cref="UnityEngine.AudioSource"/>.</returns>
+	/// <param name="Clip">Clip to be taken.</param>
+	/// <param name="Position">Position to be instantiated.</param>
+	/// <param name="Volume">Volume to be played.</param>
+	public static AudioSource PlayClipAtNetWork(AudioClip Clip, Vector3 Position, float Volume)
+	{
+		GameObject Audio_Temporario = new GameObject("Audio_Temporario");;
+
+		Audio_Temporario.transform.position = Position;
+
+		AudioSource aSource = Audio_Temporario.AddComponent<AudioSource>(); 
+
+		aSource.clip = Clip;
+		aSource.minDistance = 10;
+		aSource.maxDistance = 500;
+		aSource.volume = Volume;
+		aSource.Play ();
+
+		NetworkServer.Spawn (Audio_Temporario);
+
+		Destroy (Audio_Temporario,Clip.length);
+
+		return aSource;
+	}
+
+	/// <summary>
 	/// Play the Effect, at Position, at Rotation , and Destroy at Time.
 	/// </summary>
 	/// <returns>The <see cref="UnityEngine.GameObject"/>.</returns>
@@ -51,6 +80,26 @@ public class Utilities : NetworkBehaviour
 	{
 		GameObject Efeito_Temporario = Instantiate (Effect, Position, Rotation) as GameObject;
 		Efeito_Temporario.name = "Efeito_Temporario";
+
+		Destroy (Efeito_Temporario, DestroyTime);
+
+		return Efeito_Temporario;
+	}
+
+	/// Play the Effect, at Position, at Rotation , and Destroy at Time in Network.
+	/// </summary>
+	/// <returns>The <see cref="UnityEngine.GameObject"/>.</returns>
+	/// <param name="Effect">Effect to be taken.</param>
+	/// <param name="Position">Position to be instantiated.</param>
+	/// <param name="Rotation">Rotation to be instantiated.</param>
+	/// <param name="DestroyTime">Time to be destroyed after born.</param>
+	public static GameObject PlayEffectAtNetwork(GameObject Effect, Vector3 Position, Quaternion Rotation ,float DestroyTime)
+	{
+		GameObject Efeito_Temporario = Instantiate (Effect, Position, Rotation) as GameObject;
+
+		Efeito_Temporario.name = "Efeito_Temporario";
+
+		NetworkServer.Spawn (Efeito_Temporario);
 
 		Destroy (Efeito_Temporario, DestroyTime);
 
@@ -90,6 +139,46 @@ public class Utilities : NetworkBehaviour
 		foreach (Transform Child in Childs)
 		{
 			if (Child.name == Name) 
+			{
+				return Child;
+			}
+		}
+		return null;
+	}
+
+	/// <summary>
+	/// Gets the children in network.
+	/// </summary>
+	/// <returns>The children.</returns>
+	/// <param name="obj"> Object that contains children.</param>
+	/// <param name="Tag"> Tag of the children to be found.</param>
+	static public GameObject GetChildrenInNetwork(GameObject obj, string Tag) 
+	{
+		Transform[] Childs = obj.transform.GetComponentsInChildren<Transform>(true);
+
+		foreach (Transform Child in Childs)
+		{
+			if (Child.gameObject.tag == Tag) 
+			{
+				return Child.gameObject;
+			}
+		}
+		return null;
+	}
+
+	/// <summary>
+	/// Gets the children in network.
+	/// </summary>
+	/// <returns>The children.</returns>
+	/// <param name="obj"> Transform that contains children</param>
+	/// <param name="Tag"> Tag of the children to be found.</param>
+	static public Transform GetChildrenInNetwork(Transform obj, string Tag)
+	{
+		Transform[] Childs = obj.transform.GetComponentsInChildren<Transform>(true);
+
+		foreach (Transform Child in Childs)
+		{
+			if (Child.tag == Tag) 
 			{
 				return Child;
 			}
@@ -159,6 +248,64 @@ public class Utilities : NetworkBehaviour
 	/// Gets the father.
 	/// </summary>
 	/// <returns>The father.</returns>
+	/// <param name="Obj"> Transform that contains father.</param>
+	/// <param name="Tag"> Tag of the father to be found.</param>
+	static public Transform GetFatherInNetwork(Transform Obj, string Tag) 
+	{
+		Transform Father = Obj.transform.root;
+
+		if(Father.tag == Tag)
+		{
+			return Father;
+		}
+		else
+		{
+			Transform[] Uncles = Father.GetComponentsInChildren<Transform> (true);
+
+			foreach (Transform Child in Uncles)
+			{
+				if (Child.tag == Tag) 
+				{
+					return Child;
+				}
+			}
+		}
+		return null;
+	}
+
+	/// <summary>
+	/// Gets the father.
+	/// </summary>
+	/// <returns>The father.</returns>
+	/// <param name="Obj"> GameObject that contains father.</param>
+	/// <param name="Tag"> Tag of the father to be found.</param>
+	static public GameObject GetFatherInNetwork(GameObject Obj, string Tag) 
+	{
+		Transform Father = Obj.transform.root;
+
+		if(Father.tag == Tag)
+		{
+			return Father.gameObject;
+		}
+		else
+		{
+			Transform[] Uncles = Father.GetComponentsInChildren<Transform> (true);
+
+			foreach (Transform Child in Uncles)
+			{
+				if (Child.tag == Tag) 
+				{
+					return Child.gameObject;
+				}
+			}
+		}
+		return null;
+	}
+
+	/// <summary>
+	/// Gets the father.
+	/// </summary>
+	/// <returns>The father.</returns>
 	/// <param name="Obj"> Get's the first Transform father of hierarchy.</param>
 	static public Transform GetFather(Transform Obj) 
 	{
@@ -187,6 +334,18 @@ public class Utilities : NetworkBehaviour
 	static public GameObject FindInHierarchy(string Name)
 	{
 		GameObject Finder = GameObject.Find (Name);
+
+		return Finder;
+	}
+
+	/// <summary>
+	/// Find object not attach to script in hierarchy in network.
+	/// </summary>
+	/// <returns>The in hierarchy.</returns>
+	/// <param name="Tag">Tag of object to be found on hierarchy.</param>
+	static public GameObject FindInHierarchyNetworked(string Tag)
+	{
+		GameObject Finder = GameObject.FindGameObjectWithTag (Tag);
 
 		return Finder;
 	}
