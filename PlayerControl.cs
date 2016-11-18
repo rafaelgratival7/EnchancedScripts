@@ -45,12 +45,13 @@ public class PlayerControl : MonoBehaviour {
 			Controlle = false;
 		}
 	
+		_x = Input.GetAxis ("Horizontal") * speed * Time.deltaTime;
+		_z = Input.GetAxis ("Vertical") * speed * Time.deltaTime;
+	
 		if(Controlle)
 		{
 			_xR = Input.GetAxis ("R_Horizontal") * speed * Time.deltaTime;
 			_yR = Input.GetAxis ("R_Vertical") * speed * Time.deltaTime;
-			_x = Input.GetAxis ("Horizontal") * speed * Time.deltaTime;
-			_z = Input.GetAxis ("Vertical") * speed * Time.deltaTime;
 
 			Vector3 Fixmath = new Vector3 (0, Mathf.Atan2 (-_xR, -_yR) * Mathf.Rad2Deg, 0);
 			Mesh.transform.rotation = Quaternion.Euler (-Fixmath);
@@ -59,9 +60,6 @@ public class PlayerControl : MonoBehaviour {
 		}
 		else
 		{
-			_x = Input.GetAxis ("Horizontal") * speed * Time.deltaTime;
-			_z = Input.GetAxis ("Vertical") * speed * Time.deltaTime;
-
 			Vector2 positionOnScreen = Camera.main.WorldToViewportPoint (transform.position);
 			Vector2 mouseOnScreen = (Vector2)Camera.main.ScreenToViewportPoint(Input.mousePosition);
 
