@@ -29,7 +29,8 @@ public class PlayerControl : MonoBehaviour {
 	private bool Controlle;
 
 
-	void Start () {
+	void Start ()
+	{
 		_isGrounded = true;
 		Controlle = false;
 	}
@@ -37,13 +38,9 @@ public class PlayerControl : MonoBehaviour {
 	void Update () {
 
 		if( Input.GetJoystickNames ().Length > 0)
-		{
 			Controlle = true;
-		}
 		else
-		{
 			Controlle = false;
-		}
 	
 		_x = Input.GetAxis ("Horizontal") * speed * Time.deltaTime;
 		_z = Input.GetAxis ("Vertical") * speed * Time.deltaTime;
@@ -52,21 +49,16 @@ public class PlayerControl : MonoBehaviour {
 		{
 			_xR = Input.GetAxis ("R_Horizontal") * speed * Time.deltaTime;
 			_yR = Input.GetAxis ("R_Vertical") * speed * Time.deltaTime;
-
 			Vector3 Fixmath = new Vector3 (0, Mathf.Atan2 (-_xR, -_yR) * Mathf.Rad2Deg, 0);
 			Mesh.transform.rotation = Quaternion.Euler (-Fixmath);
-
 			transform.Translate (_x,0,_z);
 		}
 		else
 		{
 			Vector2 positionOnScreen = Camera.main.WorldToViewportPoint (transform.position);
 			Vector2 mouseOnScreen = (Vector2)Camera.main.ScreenToViewportPoint(Input.mousePosition);
-
 			float angle = AngleBetweenTwoPoints(-positionOnScreen, -mouseOnScreen);
-
 			Mesh.transform.rotation =  Quaternion.Euler (new Vector3(0f,angle,0f));
-
 			transform.Translate (_x,0,_z);
 		}
 
