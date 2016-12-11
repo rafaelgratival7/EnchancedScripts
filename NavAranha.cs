@@ -1,10 +1,10 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 
-
+[NetworkSettings(channel = 3,sendInterval = 0.01F)]
 public class NavAranha : NetworkBehaviour
 {
 	#region Declaração
@@ -111,7 +111,7 @@ public class NavAranha : NetworkBehaviour
 		AnimatorDaAranha = GetComponent<Animator> ();
 		SonsDaAranha = GetComponent<AudioSource> ();
 		Clip = GetComponent <NavAranhaSound>();
-		Teia = Resources.Load ("Prefabs/Bullet") as GameObject;
+		Teia = Resources.Load ("Prefabs/Npcs/Aranha/Teia") as GameObject;
 
 		if (!isServer)
 			return;
@@ -286,6 +286,7 @@ public class NavAranha : NetworkBehaviour
 
 	}
 
+
 	public IEnumerator AtackLongoAtivo()
 	{
 		yield return new WaitForSeconds (AnimatorDaAranha.GetCurrentAnimatorStateInfo(0).length - 0.2F);
@@ -295,25 +296,24 @@ public class NavAranha : NetworkBehaviour
 		if(InimigoMaisProximo != null && DistanciaEmRadius > PontoMaximo)
 		{
 			Vector3 Direction = (transform.position - InimigoMaisProximo.position).normalized;
+
 			Projectil = Instantiate (Teia, PontoDeTiro.position, Quaternion.LookRotation(-Direction)) as GameObject;
+
 			NetworkServer.Spawn (Projectil);
 
-			Seno = Mathf.Sqrt(DistanciaDoMaisProximo* -Physics.gravity.y / (Mathf.Sin(Mathf.Deg2Rad * AnguloDeTiro * 2)));
+			Projectil.GetComponent<Rigidbody>().AddForce(-Direction * 30,ForceMode.Impulse); // ADD PROJECTIL AQUI
 
-			Tangente = Seno * Mathf.Sin(Mathf.Deg2Rad * AnguloDeTiro);
-			Cosseno = Seno * Mathf.Cos(Mathf.Deg2Rad * AnguloDeTiro);
-
-			VelocidadeLocal = new Vector3(0f, Tangente, Cosseno);
-
-			VelocidadeGlobal = transform.TransformVector(VelocidadeLocal);
-
-			Projectil.GetComponent<Rigidbody>().AddForce(-Direction * 50,ForceMode.Force);
-
-			Projectil.GetComponent<Rigidbody>().velocity = VelocidadeGlobal;
-
-			Projectil.transform.position += Projectil.transform.forward * 1 * Time.deltaTime;
+			RpcSendShoot (Projectil,Direction);
 		}
 	}
+
+	[ClientRpc]
+	public void RpcSendShoot(GameObject thisOne,Vector3 Direction)
+	{
+		thisOne.transform.rotation = Quaternion.LookRotation (-Direction);
+		thisOne.GetComponent<Rigidbody>().AddForce(-Direction * 30,ForceMode.Impulse);
+	}
+
 
 	public IEnumerator AtackCurtoAtivo()
 	{
@@ -322,7 +322,7 @@ public class NavAranha : NetworkBehaviour
 
 		if(Damage.isHere)
 		{
-			Damage.isThis.GetComponent <Health>().TakeDamage (10,this.gameObject);
+			Damage.isThis.GetComponent <PlayerStats>().TakeDamage (10F);
 		}
 
 		AtacandoPerto = true;
@@ -397,6 +397,41 @@ public class NavAranha : NetworkBehaviour
 			AngulosEmGraus += transform.eulerAngles.y;
 		}
 		return new Vector3 (Mathf.Sin (AngulosEmGraus * Mathf.Deg2Rad), 0, Mathf.Cos (AngulosEmGraus * Mathf.Deg2Rad));
+	}
+	#endregion
+
+	#region Parte-3 Som Sync
+	public void AudioSync1()
+	{
+		if (!isServer)
+			return;
+
+		SonsDaAranha.PlayOneShot (Clip.AranhaSoms[0]);
+		RpcReproduceAudio (0);
+	}
+
+	public void AudioSync2()
+	{
+		if (!isServer)
+			return;
+
+		SonsDaAranha.PlayOneShot (Clip.AranhaSoms[1]);
+		RpcReproduceAudio (1);
+	}
+
+	public void AudioSync3()
+	{
+		if (!isServer)
+			return;
+
+		SonsDaAranha.PlayOneShot (Clip.AranhaSoms[2]);
+		RpcReproduceAudio (2);
+	}
+
+	[ClientRpc]
+	public void RpcReproduceAudio(int Number)
+	{
+		SonsDaAranha.PlayOneShot (Clip.AranhaSoms[Number]);
 	}
 	#endregion
 }
