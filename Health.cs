@@ -2,7 +2,9 @@
 using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 
+[NetworkSettings(channel = 3,sendInterval = 0.01F)]
 public class Health : NetworkBehaviour
 {
 	#region Declaration
@@ -89,14 +91,14 @@ public class Health : NetworkBehaviour
 
 	public void EnemyDead (int Amount)
 	{
-		foreach(GameObject Player in Players)
-		{
-			if(Players.Count > 0)
-			{
-				Player.GetComponent <Experience>().SendExperience (Amount / Players.Count);
-				RpcExperienceDivision (Player,Amount);
-			}
-		}
+		GetComponent <Animator>().SetTrigger ("Morto");
+
+		StartCoroutine (DeathTime (2));
+	}
+
+	public IEnumerator DeathTime(int Amount)
+	{
+		yield return new WaitForSeconds (Amount);
 
 		NetworkServer.Destroy (this.gameObject);
 	}

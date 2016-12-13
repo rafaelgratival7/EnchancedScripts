@@ -3,6 +3,7 @@ using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
 
+
 public class EventManager : NetworkBehaviour {
 
 	#region Declaração
